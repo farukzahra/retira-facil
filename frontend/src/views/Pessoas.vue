@@ -1,42 +1,49 @@
 <template>
-    <v-container>
-        <v-card class="pa-4" outlined>
-            <v-card-title>
-                <v-icon class="mr-2">mdi-account</v-icon>
-                Cadastro de Pessoas
-            </v-card-title>
+  <v-container>
+    <v-card class="pa-4" outlined>
+      <v-card-title>
+        <v-icon class="mr-2">mdi-account</v-icon>
+        Cadastro de Pessoas
+      </v-card-title>
 
-            <v-card-text>
-                <v-form @submit.prevent="salvar">
-                    <v-row>
-                        <v-col cols="12" md="5">
-                            <v-text-field v-model="form.nome" label="Nome completo" required />
-                        </v-col>
-                        <v-col cols="12" md="5">
-                            <v-text-field v-model="form.cpf" label="CPF" required
-                                @input="form.cpf = aplicarMascaraCPF(form.cpf)" />
-                        </v-col>
-                        <v-col cols="12" md="2">
-                            <v-btn type="submit" color="primary" block>
-                                {{ form.id ? 'Atualizar' : 'Salvar' }}
-                            </v-btn>
-                        </v-col>
-                    </v-row>
-                </v-form>
-            </v-card-text>
-        </v-card>
+      <v-card-text>
+        <v-form @submit.prevent="salvar">
+          <v-row>
+            <v-col cols="12">
+              <v-text-field v-model="form.nome" label="Nome completo" required />
+            </v-col>
 
-        <v-card class="mt-6" outlined>
-            <v-data-table :headers="headers" :items="pessoas" class="elevation-1" item-value="id">
-                <template #item.actions="{ item }">
-                    <v-btn icon variant="text" color="primary" @click="editar(item)">
-                        <v-icon>mdi-pencil</v-icon>
-                    </v-btn>
-                </template>
-            </v-data-table>
-        </v-card>
-    </v-container>
+            <v-col cols="12">
+              <v-text-field
+                v-model="form.cpf"
+                label="CPF"
+                required
+                @input="form.cpf = aplicarMascaraCPF(form.cpf)"
+              />
+            </v-col>
+
+            <v-col cols="12" class="d-flex justify-end">
+              <v-btn type="submit" color="primary">
+                {{ form.id ? 'Atualizar' : 'Salvar' }}
+              </v-btn>
+            </v-col>
+          </v-row>
+        </v-form>
+      </v-card-text>
+    </v-card>
+
+    <v-card class="mt-6" outlined>
+      <v-data-table :headers="headers" :items="pessoas" class="elevation-1" item-value="id">
+        <template #item.actions="{ item }">
+          <v-btn icon variant="text" color="primary" @click="editar(item)">
+            <v-icon>mdi-pencil</v-icon>
+          </v-btn>
+        </template>
+      </v-data-table>
+    </v-card>
+  </v-container>
 </template>
+
 
 <script setup>
 import { ref, onMounted } from 'vue'

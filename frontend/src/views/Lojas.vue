@@ -2,26 +2,16 @@
   <v-container>
     <v-card class="pa-4" outlined>
       <v-card-title>
-        <v-icon class="mr-2">mdi-package-variant</v-icon>
-        Lista de Pacotes
+        <v-icon class="mr-2">mdi-store</v-icon>
+        Cadastro de Lojas
       </v-card-title>
 
       <v-card-text>
         <v-form @submit.prevent="salvar">
           <v-row>
             <v-col cols="12">
-              <v-text-field v-model="form.rastreio" label="Código de Rastreio" required />
+              <v-text-field v-model="form.nome" label="Nome da Loja" required />
             </v-col>
-
-            <v-col cols="12">
-              <v-select v-model="form.pessoa_id" :items="pessoas" item-value="id" item-title="nome" label="Pessoa"
-                required />
-            </v-col>
-
-            <v-col cols="12">
-              <v-select v-model="form.loja_id" :items="lojas" item-value="id" item-title="nome" label="Loja" required />
-            </v-col>
-
             <v-col cols="12" class="d-flex justify-end">
               <v-btn type="submit" color="primary">
                 {{ form.id ? 'Atualizar' : 'Salvar' }}
@@ -29,13 +19,11 @@
             </v-col>
           </v-row>
         </v-form>
-
-
       </v-card-text>
     </v-card>
 
     <v-card class="mt-6" outlined>
-      <v-data-table :headers="headers" :items="pacotes" class="elevation-1" item-value="id">
+      <v-data-table :headers="headers" :items="lojas" class="elevation-1" item-value="id">
         <template #item.actions="{ item }">
           <v-btn icon variant="text" color="primary" @click="editar(item)">
             <v-icon>mdi-pencil</v-icon>
@@ -47,11 +35,10 @@
       </v-data-table>
     </v-card>
 
-    <!-- Dialog de confirmação -->
     <v-dialog v-model="dialogConfirm" persistent max-width="400">
       <v-card>
         <v-card-title class="text-h6">Confirmar exclusão</v-card-title>
-        <v-card-text>Tem certeza que deseja excluir este pacote?</v-card-text>
+        <v-card-text>Tem certeza que deseja excluir esta loja?</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn variant="text" @click="dialogConfirm = false">Não</v-btn>
@@ -62,32 +49,20 @@
   </v-container>
 </template>
 
+
 <script setup>
 import { ref, onMounted } from 'vue'
 
-const pacotes = ref([])
-const pessoas = ref([])
 const lojas = ref([])
-
-const form = ref({ id: null, rastreio: '', pessoa_id: null, loja_id: null })
+const form = ref({ id: null, nome: '' })
 const dialogConfirm = ref(false)
 const confirmarId = ref(null)
 
 const headers = [
   { title: 'ID', key: 'id' },
-  { title: 'Código de Rastreio', key: 'rastreio' },
-  { title: 'Pessoa', key: 'pessoa_nome' },
-  { title: 'Loja', key: 'loja_nome' },
+  { title: 'Nome', key: 'nome' },
   { title: 'Ações', key: 'actions', sortable: false },
 ]
-
-const fetchPacotes = async () => {
-  pacotes.value = await (await fetch('http://localhost:3001/api/pacotes')).json()
-}
-
-const fetchPessoas = async () => {
-  pessoas.value = await (await fetch('http://localhost:3001/api/pessoas')).json()
-}
 
 const fetchLojas = async () => {
   lojas.value = await (await fetch('http://localhost:3001/api/lojas')).json()
@@ -96,8 +71,8 @@ const fetchLojas = async () => {
 const salvar = async () => {
   const method = form.value.id ? 'PUT' : 'POST'
   const url = form.value.id
-    ? `http://localhost:3001/api/pacotes/${form.value.id}`
-    : 'http://localhost:3001/api/pacotes'
+    ? `http://localhost:3001/api/lojas/${form.value.id}`
+    : 'http://localhost:3001/api/lojas'
 
   await fetch(url, {
     method,
@@ -105,17 +80,12 @@ const salvar = async () => {
     body: JSON.stringify(form.value)
   })
 
-  form.value = { id: null, rastreio: '', pessoa_id: null, loja_id: null }
-  fetchPacotes()
+  form.value = { id: null, nome: '' }
+  fetchLojas()
 }
 
 const editar = (item) => {
-  form.value = {
-    id: item.id,
-    rastreio: item.rastreio,
-    pessoa_id: item.pessoa_id,
-    loja_id: item.loja_id
-  }
+  form.value = { ...item }
 }
 
 const confirmarExclusao = (id) => {
@@ -125,13 +95,9 @@ const confirmarExclusao = (id) => {
 
 const deletar = async (id) => {
   dialogConfirm.value = false
-  await fetch(`http://localhost:3001/api/pacotes/${id}`, { method: 'DELETE' })
-  fetchPacotes()
+  await fetch(`http://localhost:3001/api/lojas/${id}`, { method: 'DELETE' })
+  fetchLojas()
 }
 
-onMounted(() => {
-  fetchPacotes()
-  fetchPessoas()
-  fetchLojas()
-})
+onMounted(fetchLojas)
 </script>
