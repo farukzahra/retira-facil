@@ -7,6 +7,7 @@
           <RouterLink to="/pacotes" class="menu-link">Pacotes</RouterLink>
           <RouterLink to="/pessoas" class="menu-link">Pessoas</RouterLink>
           <RouterLink to="/lojas" class="menu-link">Lojas</RouterLink>
+          <RouterLink to="/configuracao" class="menu-link">Configuração</RouterLink>
         </nav>
       </v-container>
     </v-app-bar>

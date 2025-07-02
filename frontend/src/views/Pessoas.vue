@@ -22,6 +22,18 @@
               />
             </v-col>
 
+            <v-col cols="12">
+              <v-text-field
+                v-model.number="form.saldo"
+                label="Saldo"
+                prefix="R$"
+                type="number"
+                min="0"
+                step="0.01"
+                required
+              />
+            </v-col>
+
             <v-col cols="12" class="d-flex justify-end">
               <v-btn type="submit" color="primary">
                 {{ form.id ? 'Atualizar' : 'Salvar' }}
@@ -34,6 +46,9 @@
 
     <v-card class="mt-6" outlined>
       <v-data-table :headers="headers" :items="pessoas" class="elevation-1" item-value="id">
+        <template #item.saldo="{ item }">
+          R$ {{ (item.saldo ?? 0).toFixed(2) }}
+        </template>
         <template #item.actions="{ item }">
           <v-btn icon variant="text" color="primary" @click="editar(item)">
             <v-icon>mdi-pencil</v-icon>
@@ -50,12 +65,13 @@ import { ref, onMounted } from 'vue'
 import { aplicarMascaraCPF } from '../utils/mask.js'
 
 const pessoas = ref([])
-const form = ref({ id: null, nome: '', cpf: '' })
+const form = ref({ id: null, nome: '', cpf: '', saldo: 0 })
 
 const headers = [
     { title: 'ID', key: 'id' },
     { title: 'Nome', key: 'nome' },
     { title: 'CPF', key: 'cpf' },
+    { title: 'Saldo', key: 'saldo' },
     { title: 'Ações', key: 'actions', sortable: false }
 ]
 
@@ -81,12 +97,13 @@ const salvar = async () => {
         return
     }
 
-    form.value = { id: null, nome: '', cpf: '' }
+    form.value = { id: null, nome: '', cpf: '', saldo: 0 }
     fetchPessoas()
 }
 
 const editar = (p) => {
     form.value = { ...p }
+    if (form.value.saldo == null) form.value.saldo = 0
 }
 
 onMounted(fetchPessoas)

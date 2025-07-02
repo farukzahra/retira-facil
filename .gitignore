@@ -1,4 +1,5 @@
 *.history
+*.zip
 
 # Node
 node_modules/

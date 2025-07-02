@@ -4,9 +4,10 @@ const db = new sqlite3.Database('retira-facil.db');
 // Criação das tabelas e seed
 db.serialize(() => {
   db.run(`CREATE TABLE IF NOT EXISTS pessoa (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nome TEXT NOT NULL,
-    cpf TEXT NOT NULL UNIQUE
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nome TEXT NOT NULL,
+  cpf TEXT NOT NULL UNIQUE,
+  saldo REAL DEFAULT 0
   )`);
 
   db.run(`CREATE TABLE IF NOT EXISTS lojas (
@@ -52,6 +53,15 @@ db.serialize(() => {
       stmt.finalize();
     }
   });
+
+  db.run(`CREATE TABLE IF NOT EXISTS configuracao (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    chave TEXT NOT NULL UNIQUE,
+    valor TEXT NOT NULL
+  )`);
+
+  db.run(`INSERT OR IGNORE INTO configuracao (chave, valor) VALUES ('valorPorRetirada', '1')`);
+
 });
 
 module.exports = db;

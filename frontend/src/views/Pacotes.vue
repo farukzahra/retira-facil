@@ -29,8 +29,6 @@
             </v-col>
           </v-row>
         </v-form>
-
-
       </v-card-text>
     </v-card>
 
@@ -43,11 +41,13 @@
           <v-btn icon variant="text" color="error" @click="confirmarExclusao(item.id)">
             <v-icon>mdi-delete</v-icon>
           </v-btn>
+          <v-btn icon variant="text" color="success" @click="abrirDialogRetirada(item)">
+            <v-icon>mdi-cash</v-icon>
+          </v-btn>
         </template>
       </v-data-table>
     </v-card>
 
-    <!-- Dialog de confirmação -->
     <v-dialog v-model="dialogConfirm" persistent max-width="400">
       <v-card>
         <v-card-title class="text-h6">Confirmar exclusão</v-card-title>
@@ -59,11 +59,38 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    
+    <!-- Dialog de retirada -->
+    <v-dialog v-model="dialogRetirada" persistent max-width="400">
+      <v-card>
+        <v-card-title class="text-h6">Retirar Pacote</v-card-title>
+        <v-card-text>
+          <div>
+            Valor por retirada: <b>R$ {{ valorPorRetirada.toFixed(2) }}</b>
+          </div>
+          <v-text-field
+            v-model.number="valorPago"
+            label="Valor pago"
+            type="number"
+            min="0"
+            step="0.01"
+          />
+          <div v-if="pessoaSelecionada">
+            Saldo atual: <b>R$ {{ pessoaSelecionada.saldo?.toFixed(2) ?? '0.00' }}</b>
+          </div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn variant="text" @click="dialogRetirada = false">Cancelar</v-btn>
+          <v-btn variant="text" color="success" @click="confirmarRetirada">Confirmar</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 
 const pacotes = ref([])
 const pessoas = ref([])
@@ -80,6 +107,48 @@ const headers = [
   { title: 'Loja', key: 'loja_nome' },
   { title: 'Ações', key: 'actions', sortable: false },
 ]
+
+// --- Retirada ---
+const dialogRetirada = ref(false)
+const valorPorRetirada = ref(1)
+
+const fetchValorPorRetirada = async () => {
+  const res = await fetch('http://localhost:3001/api/configuracao/valorPorRetirada')
+  const data = await res.json()
+  valorPorRetirada.value = Number(data.valor)
+}
+
+const valorPago = ref(0)
+const pacoteSelecionado = ref(null)
+const pessoaSelecionada = computed(() => {
+  if (!pacoteSelecionado.value) return null
+  return pessoas.value.find(p => p.id === pacoteSelecionado.value.pessoa_id)
+})
+
+const abrirDialogRetirada = (item) => {
+  pacoteSelecionado.value = item
+  valorPago.value = 0
+  dialogRetirada.value = true
+}
+
+const confirmarRetirada = async () => {
+  if (!pessoaSelecionada.value) {
+    alert('Pessoa não encontrada')
+    return
+  }
+  const saldoAtual = pessoaSelecionada.value.saldo || 0
+  const novoSaldo = saldoAtual + (valorPago.value - valorPorRetirada.value)
+  // Atualiza saldo no backend
+  await fetch(`http://localhost:3001/api/pessoas/${pessoaSelecionada.value.id}/saldo`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ saldo: novoSaldo })
+  })
+  dialogRetirada.value = false
+  await fetchPessoas()
+  alert(`Saldo atualizado: R$ ${novoSaldo.toFixed(2)}`)
+}
+// --- Fim retirada ---
 
 const fetchPacotes = async () => {
   pacotes.value = await (await fetch('http://localhost:3001/api/pacotes')).json()
@@ -133,5 +202,6 @@ onMounted(() => {
   fetchPacotes()
   fetchPessoas()
   fetchLojas()
+  fetchValorPorRetirada()
 })
 </script>

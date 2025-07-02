@@ -21,6 +21,26 @@ app.post('/api/pessoas', (req, res) => {
   })
 })
 
+app.put('/api/pessoas/:id/saldo', (req, res) => {
+  const { saldo } = req.body
+  db.run('UPDATE pessoa SET saldo = ? WHERE id = ?', [saldo, req.params.id], function (err) {
+    if (err) return res.status(500).json({ error: err.message })
+    res.json({ updated: this.changes })
+  })
+})
+
+app.put('/api/pessoas/:id', (req, res) => {
+  const { nome, cpf, saldo } = req.body
+  db.run(
+    'UPDATE pessoa SET nome = ?, cpf = ?, saldo = ? WHERE id = ?',
+    [nome, cpf, saldo, req.params.id],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message })
+      res.json({ updated: this.changes })
+    }
+  )
+})
+
 app.get('/api/lojas', (req, res) => {
   db.all('SELECT * FROM lojas ORDER BY nome', (err, rows) => {
     if (err) return res.status(500).json({ error: err.message })
@@ -95,6 +115,24 @@ app.delete('/api/pacotes/:id', (req, res) => {
     if (err) return res.status(500).json({ error: err.message })
     res.json({ deleted: this.changes })
   })
+})
+
+app.get('/api/configuracao/:chave', (req, res) => {
+  db.get('SELECT valor FROM configuracao WHERE chave = ?', [req.params.chave], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message })
+    res.json({ valor: row ? row.valor : null })
+  })
+})
+
+app.put('/api/configuracao/:chave', (req, res) => {
+  db.run(
+    'UPDATE configuracao SET valor = ? WHERE chave = ?',
+    [req.body.valor, req.params.chave],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message })
+      res.json({ updated: this.changes })
+    }
+  )
 })
 
 app.listen(3001, () => {
