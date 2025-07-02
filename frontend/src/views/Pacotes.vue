@@ -9,13 +9,33 @@
       <v-card-text>
         <v-form @submit.prevent="salvar">
           <v-row>
-            <v-col cols="12" md="5">
-              <v-text-field v-model="form.nome" label="Nome" required />
-            </v-col>
-            <v-col cols="12" md="5">
+            <v-col cols="12" md="4">
               <v-text-field v-model="form.rastreio" label="Código de Rastreio" required />
             </v-col>
-            <v-col cols="12" md="2">
+
+            <v-col cols="12" md="4">
+              <v-select
+                v-model="form.pessoa_id"
+                :items="pessoas"
+                item-value="id"
+                item-title="nome"
+                label="Pessoa"
+                required
+              />
+            </v-col>
+
+            <v-col cols="12" md="3">
+              <v-select
+                v-model="form.loja_id"
+                :items="lojas"
+                item-value="id"
+                item-title="nome"
+                label="Loja"
+                required
+              />
+            </v-col>
+
+            <v-col cols="12" md="1">
               <v-btn type="submit" color="primary" block>
                 {{ form.id ? 'Atualizar' : 'Salvar' }}
               </v-btn>
@@ -57,19 +77,31 @@
 import { ref, onMounted } from 'vue'
 
 const pacotes = ref([])
-const form = ref({ id: null, nome: '', rastreio: '' })
+const pessoas = ref([])
+const lojas = ref([])
+
+const form = ref({ id: null, rastreio: '', pessoa_id: null, loja_id: null })
 const dialogConfirm = ref(false)
 const confirmarId = ref(null)
 
 const headers = [
   { title: 'ID', key: 'id' },
-  { title: 'Nome', key: 'nome' },
-  { title: 'Rastreio', key: 'rastreio' },
+  { title: 'Código de Rastreio', key: 'rastreio' },
+  { title: 'Pessoa', key: 'pessoa_nome' },
+  { title: 'Loja', key: 'loja_nome' },
   { title: 'Ações', key: 'actions', sortable: false },
 ]
 
 const fetchPacotes = async () => {
   pacotes.value = await (await fetch('http://localhost:3001/api/pacotes')).json()
+}
+
+const fetchPessoas = async () => {
+  pessoas.value = await (await fetch('http://localhost:3001/api/pessoas')).json()
+}
+
+const fetchLojas = async () => {
+  lojas.value = await (await fetch('http://localhost:3001/api/lojas')).json()
 }
 
 const salvar = async () => {
@@ -84,12 +116,17 @@ const salvar = async () => {
     body: JSON.stringify(form.value)
   })
 
-  form.value = { id: null, nome: '', rastreio: '' }
+  form.value = { id: null, rastreio: '', pessoa_id: null, loja_id: null }
   fetchPacotes()
 }
 
 const editar = (item) => {
-  form.value = { ...item }
+  form.value = {
+    id: item.id,
+    rastreio: item.rastreio,
+    pessoa_id: item.pessoa_id,
+    loja_id: item.loja_id
+  }
 }
 
 const confirmarExclusao = (id) => {
@@ -103,5 +140,9 @@ const deletar = async (id) => {
   fetchPacotes()
 }
 
-onMounted(fetchPacotes)
+onMounted(() => {
+  fetchPacotes()
+  fetchPessoas()
+  fetchLojas()
+})
 </script>

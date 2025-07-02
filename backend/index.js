@@ -1,11 +1,82 @@
-const express = require('express');
-const cors = require('cors');
-const app = express();
+const express = require('express')
+const cors = require('cors')
+const db = require('./db')
 
-app.use(cors());
-app.use(express.json());
-app.use('/api/pacotes', require('./routes/pacotes'));
-app.use('/api/pessoas', require('./routes/pessoas')); // Nova rota
+const app = express()
+app.use(cors())
+app.use(express.json())
 
-const PORT = 3001;
-app.listen(PORT, () => console.log(`🚀 Backend rodando em http://localhost:${PORT}`));
+// Pessoas
+app.get('/api/pessoas', (req, res) => {
+  db.all('SELECT * FROM pessoa ORDER BY nome', (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message })
+    res.json(rows)
+  })
+})
+
+app.post('/api/pessoas', (req, res) => {
+  const { nome, cpf } = req.body
+  db.run('INSERT INTO pessoa (nome, cpf) VALUES (?, ?)', [nome, cpf], function (err) {
+    if (err) return res.status(500).json({ error: err.message })
+    res.json({ id: this.lastID })
+  })
+})
+
+// Lojas
+app.get('/api/lojas', (req, res) => {
+  db.all('SELECT * FROM lojas ORDER BY nome', (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message })
+    res.json(rows)
+  })
+})
+
+// Pacotes
+app.get('/api/pacotes', (req, res) => {
+  const sql = `
+    SELECT pacotes.id, pacotes.rastreio, pessoa.nome AS pessoa_nome, loja.nome AS loja_nome,
+           pacotes.pessoa_id, pacotes.loja_id
+    FROM pacotes
+    LEFT JOIN pessoa ON pessoa.id = pacotes.pessoa_id
+    LEFT JOIN lojas AS loja ON loja.id = pacotes.loja_id
+    ORDER BY pacotes.id DESC
+  `
+  db.all(sql, (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message })
+    res.json(rows)
+  })
+})
+
+app.post('/api/pacotes', (req, res) => {
+  const { rastreio, pessoa_id, loja_id } = req.body
+  db.run(
+    'INSERT INTO pacotes (rastreio, pessoa_id, loja_id) VALUES (?, ?, ?)',
+    [rastreio, pessoa_id, loja_id],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message })
+      res.json({ id: this.lastID })
+    }
+  )
+})
+
+app.put('/api/pacotes/:id', (req, res) => {
+  const { rastreio, pessoa_id, loja_id } = req.body
+  db.run(
+    'UPDATE pacotes SET rastreio = ?, pessoa_id = ?, loja_id = ? WHERE id = ?',
+    [rastreio, pessoa_id, loja_id, req.params.id],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message })
+      res.json({ updated: this.changes })
+    }
+  )
+})
+
+app.delete('/api/pacotes/:id', (req, res) => {
+  db.run('DELETE FROM pacotes WHERE id = ?', [req.params.id], function (err) {
+    if (err) return res.status(500).json({ error: err.message })
+    res.json({ deleted: this.changes })
+  })
+})
+
+app.listen(3001, () => {
+  console.log('Servidor backend ouvindo na porta 3001')
+})
