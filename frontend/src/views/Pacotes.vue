@@ -33,7 +33,16 @@
     </v-card>
 
     <v-card class="mt-6" outlined>
-      <v-data-table :headers="headers" :items="pacotes" class="elevation-1" item-value="id">
+      <v-text-field v-model="search" label="Filtrar pacotes" class="mb-4" clearable />
+      <v-data-table :headers="headers" :items="pacotes" :search="search" class="elevation-1" item-value="id"> <template
+          #item.data_retirada="{ item }">
+          <span v-if="item.data_retirada">
+            {{ new Date(item.data_retirada).toLocaleString('pt-BR') }}
+          </span>
+          <span v-else>
+            Não retirado
+          </span>
+        </template>
         <template #item.actions="{ item }">
           <v-btn icon variant="text" color="primary" @click="editar(item)">
             <v-icon>mdi-pencil</v-icon>
@@ -41,7 +50,8 @@
           <v-btn icon variant="text" color="error" @click="confirmarExclusao(item.id)">
             <v-icon>mdi-delete</v-icon>
           </v-btn>
-          <v-btn icon variant="text" color="success" @click="abrirDialogRetirada(item)">
+          <v-btn icon variant="text" color="success" @click="abrirDialogRetirada(item)"
+            v-if="!item.data_retirada || item.data_retirada === ''">
             <v-icon>mdi-cash</v-icon>
           </v-btn>
         </template>
@@ -59,7 +69,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    
+
     <!-- Dialog de retirada -->
     <v-dialog v-model="dialogRetirada" persistent max-width="400">
       <v-card>
@@ -68,13 +78,7 @@
           <div>
             Valor por retirada: <b>R$ {{ valorPorRetirada.toFixed(2) }}</b>
           </div>
-          <v-text-field
-            v-model.number="valorPago"
-            label="Valor pago"
-            type="number"
-            min="0"
-            step="0.01"
-          />
+          <v-text-field v-model.number="valorPago" label="Valor pago" type="number" min="0" step="0.01" />
           <div v-if="pessoaSelecionada">
             Saldo atual: <b>R$ {{ pessoaSelecionada.saldo?.toFixed(2) ?? '0.00' }}</b>
           </div>
@@ -99,12 +103,14 @@ const lojas = ref([])
 const form = ref({ id: null, rastreio: '', pessoa_id: null, loja_id: null })
 const dialogConfirm = ref(false)
 const confirmarId = ref(null)
+const search = ref('')
 
 const headers = [
   { title: 'ID', key: 'id' },
-  { title: 'Código de Rastreio', key: 'rastreio' },
-  { title: 'Pessoa', key: 'pessoa_nome' },
-  { title: 'Loja', key: 'loja_nome' },
+  { title: 'Código de Rastreio', key: 'rastreio', filterable: true },
+  { title: 'Pessoa', key: 'pessoa_nome', filterable: true },
+  { title: 'Loja', key: 'loja_nome', filterable: true },
+  { title: 'Data da Retirada', key: 'data_retirada' },
   { title: 'Ações', key: 'actions', sortable: false },
 ]
 
@@ -131,6 +137,7 @@ const abrirDialogRetirada = (item) => {
   dialogRetirada.value = true
 }
 
+// ...existing code...
 const confirmarRetirada = async () => {
   if (!pessoaSelecionada.value) {
     alert('Pessoa não encontrada')
@@ -138,17 +145,19 @@ const confirmarRetirada = async () => {
   }
   const saldoAtual = pessoaSelecionada.value.saldo || 0
   const novoSaldo = saldoAtual + (valorPago.value - valorPorRetirada.value)
-  // Atualiza saldo no backend
   await fetch(`http://localhost:3001/api/pessoas/${pessoaSelecionada.value.id}/saldo`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ saldo: novoSaldo })
   })
+  await fetch(`http://localhost:3001/api/pacotes/${pacoteSelecionado.value.id}/retirar`, {
+    method: 'PUT'
+  })
   dialogRetirada.value = false
+  await fetchPacotes()
   await fetchPessoas()
-  alert(`Saldo atualizado: R$ ${novoSaldo.toFixed(2)}`)
+  alert(`Retirada registrada! Saldo atualizado: R$ ${novoSaldo.toFixed(2)}`)
 }
-// --- Fim retirada ---
 
 const fetchPacotes = async () => {
   pacotes.value = await (await fetch('http://localhost:3001/api/pacotes')).json()

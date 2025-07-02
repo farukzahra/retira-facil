@@ -28,35 +28,17 @@
           <v-btn icon variant="text" color="primary" @click="editar(item)">
             <v-icon>mdi-pencil</v-icon>
           </v-btn>
-          <v-btn icon variant="text" color="error" @click="confirmarExclusao(item.id)">
-            <v-icon>mdi-delete</v-icon>
-          </v-btn>
         </template>
       </v-data-table>
     </v-card>
-
-    <v-dialog v-model="dialogConfirm" persistent max-width="400">
-      <v-card>
-        <v-card-title class="text-h6">Confirmar exclusão</v-card-title>
-        <v-card-text>Tem certeza que deseja excluir esta loja?</v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn variant="text" @click="dialogConfirm = false">Não</v-btn>
-          <v-btn variant="text" color="error" @click="deletar(confirmarId)">Sim</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
   </v-container>
 </template>
-
 
 <script setup>
 import { ref, onMounted } from 'vue'
 
 const lojas = ref([])
 const form = ref({ id: null, nome: '' })
-const dialogConfirm = ref(false)
-const confirmarId = ref(null)
 
 const headers = [
   { title: 'ID', key: 'id' },
@@ -86,17 +68,6 @@ const salvar = async () => {
 
 const editar = (item) => {
   form.value = { ...item }
-}
-
-const confirmarExclusao = (id) => {
-  confirmarId.value = id
-  dialogConfirm.value = true
-}
-
-const deletar = async (id) => {
-  dialogConfirm.value = false
-  await fetch(`http://localhost:3001/api/lojas/${id}`, { method: 'DELETE' })
-  fetchLojas()
 }
 
 onMounted(fetchLojas)

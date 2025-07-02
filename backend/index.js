@@ -74,7 +74,7 @@ app.delete('/api/lojas/:id', (req, res) => {
 app.get('/api/pacotes', (req, res) => {
   const sql = `
     SELECT pacotes.id, pacotes.rastreio, pessoa.nome AS pessoa_nome, loja.nome AS loja_nome,
-           pacotes.pessoa_id, pacotes.loja_id
+           pacotes.pessoa_id, pacotes.loja_id, pacotes.data_retirada
     FROM pacotes
     LEFT JOIN pessoa ON pessoa.id = pacotes.pessoa_id
     LEFT JOIN lojas AS loja ON loja.id = pacotes.loja_id
@@ -98,14 +98,14 @@ app.post('/api/pacotes', (req, res) => {
   )
 })
 
-app.put('/api/pacotes/:id', (req, res) => {
-  const { rastreio, pessoa_id, loja_id } = req.body
+app.put('/api/pacotes/:id/retirar', (req, res) => {
+  const dataRetirada = new Date().toISOString()
   db.run(
-    'UPDATE pacotes SET rastreio = ?, pessoa_id = ?, loja_id = ? WHERE id = ?',
-    [rastreio, pessoa_id, loja_id, req.params.id],
+    'UPDATE pacotes SET data_retirada = ? WHERE id = ?',
+    [dataRetirada, req.params.id],
     function (err) {
       if (err) return res.status(500).json({ error: err.message })
-      res.json({ updated: this.changes })
+      res.json({ updated: this.changes, data_retirada: dataRetirada })
     }
   )
 })
