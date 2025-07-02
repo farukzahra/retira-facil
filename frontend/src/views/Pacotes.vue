@@ -26,12 +26,7 @@
     </v-card>
 
     <v-card class="mt-6" outlined>
-      <v-data-table
-        :headers="headers"
-        :items="pacotes"
-        class="elevation-1"
-        item-value="id"
-      >
+      <v-data-table :headers="headers" :items="pacotes" class="elevation-1" item-value="id">
         <template #item.actions="{ item }">
           <v-btn icon variant="text" color="primary" @click="editar(item)">
             <v-icon>mdi-pencil</v-icon>
